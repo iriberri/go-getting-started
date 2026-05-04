@@ -21,10 +21,12 @@ func main() {
 	// Initialize database connection
 	db, err := initDB()
 	if err != nil {
-		log.Printf("Warning: Database connection failed: %v", err)
-	} else {
+		log.Printf("ERROR: Database connection failed: %v", err)
+	} else if db != nil {
 		defer db.Close()
-		log.Println("Database connection established")
+		log.Println("Database connection established successfully")
+	} else {
+		log.Println("No DATABASE_URL configured, skipping database setup")
 	}
 
 	router := gin.New()
@@ -60,16 +62,22 @@ func initDB() (*sql.DB, error) {
 	// PGBouncer sets DATABASE_URL automatically
 	databaseURL := os.Getenv("DATABASE_URL")
 	if databaseURL == "" {
+		log.Println("DATABASE_URL not set")
 		return nil, nil
 	}
 
+	log.Printf("Attempting to connect to database (URL length: %d chars)", len(databaseURL))
+
 	db, err := sql.Open("postgres", databaseURL)
 	if err != nil {
+		log.Printf("ERROR in sql.Open: %v", err)
 		return nil, err
 	}
 
 	// Test the connection
+	log.Println("Testing database connection with Ping...")
 	if err := db.Ping(); err != nil {
+		log.Printf("ERROR in db.Ping: %v", err)
 		return nil, err
 	}
 
