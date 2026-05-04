@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -65,6 +66,19 @@ func initDB() (*sql.DB, error) {
 	if databaseURL == "" {
 		log.Println("DATABASE_URL not set")
 		return nil, nil
+	}
+
+	// When using PGBouncer, the connection is local (127.0.0.1:6000)
+	// and should not use SSL. PGBouncer handles SSL to the actual database.
+	if strings.Contains(databaseURL, "127.0.0.1:6000") {
+		if !strings.Contains(databaseURL, "sslmode=") {
+			if strings.Contains(databaseURL, "?") {
+				databaseURL += "&sslmode=disable"
+			} else {
+				databaseURL += "?sslmode=disable"
+			}
+			log.Println("Added sslmode=disable for PGBouncer local connection")
+		}
 	}
 
 	log.Printf("Attempting to connect to database (URL length: %d chars)", len(databaseURL))
