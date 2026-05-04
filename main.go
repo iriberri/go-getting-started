@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/heroku/x/hmetrics/onload"
@@ -74,12 +75,22 @@ func initDB() (*sql.DB, error) {
 		return nil, err
 	}
 
-	// Test the connection
+	// Test the connection with retry for PGBouncer startup
 	log.Println("Testing database connection with Ping...")
-	if err := db.Ping(); err != nil {
-		log.Printf("ERROR in db.Ping: %v", err)
-		return nil, err
+	maxRetries := 5
+	for i := 0; i < maxRetries; i++ {
+		err = db.Ping()
+		if err == nil {
+			log.Println("Successfully connected to database")
+			return db, nil
+		}
+
+		log.Printf("Ping attempt %d/%d failed: %v", i+1, maxRetries, err)
+		if i < maxRetries-1 {
+			time.Sleep(2 * time.Second)
+		}
 	}
 
-	return db, nil
+	log.Printf("ERROR: Failed to connect after %d attempts: %v", maxRetries, err)
+	return nil, err
 }
