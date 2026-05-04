@@ -68,15 +68,16 @@ func initDB() (*sql.DB, error) {
 		return nil, nil
 	}
 
-	// When using PGBouncer, ensure sslmode is set
+	// When using PGBouncer, the app connects to PGBouncer locally without SSL.
+	// PGBouncer then handles the SSL connection to the actual database.
 	if strings.Contains(databaseURL, "127.0.0.1:6000") {
 		if !strings.Contains(databaseURL, "sslmode=") {
 			if strings.Contains(databaseURL, "?") {
-				databaseURL += "&sslmode=require"
+				databaseURL += "&sslmode=disable"
 			} else {
-				databaseURL += "?sslmode=require"
+				databaseURL += "?sslmode=disable"
 			}
-			log.Println("Added sslmode=require for PGBouncer connection")
+			log.Println("Added sslmode=disable for local PGBouncer connection")
 		}
 	}
 
