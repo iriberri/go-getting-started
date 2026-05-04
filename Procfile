@@ -1,1 +1,1 @@
-web: go-getting-started
+web: bin/start-pgbouncer go-getting-started

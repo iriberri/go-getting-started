@@ -8,5 +8,13 @@
     "example"
   ],
   "website": "https://github.com/heroku/go-getting-started",
-  "repository": "https://github.com/heroku/go-getting-started"
+  "repository": "https://github.com/heroku/go-getting-started",
+  "buildpacks": [
+    {
+      "url": "heroku/pgbouncer"
+    },
+    {
+      "url": "heroku/go"
+    }
+  ]
 }
